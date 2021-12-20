@@ -15,7 +15,7 @@
 	panel.margins.top = 10;
 	panel.maximumSize.height = 250;
 	scrollBar.maximumSize.height = panel.maximumSize.height;
-//=========
+	//Create group where mispelled words and their suggested replacements will be loaded (on button click)
 	var replaceGroup = panel.add("group");
 	replaceGroup.orientation = "column";
 	replaceGroup.alignChildren = "right";
