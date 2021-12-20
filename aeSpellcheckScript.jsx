@@ -1,74 +1,72 @@
-﻿/**
- * Create the main dialog, check spelling button, scrollbar, and 'ok'/'cancel' buttons. All should be visible
- */
-var w = new Window("dialog" , "AE Spellcheck");
-w.alignChildren = "right";
-var checkSpelling = w.add("button" , [0,0,296,30] , "Check Spelling for all comps");
-var mainGroup = w.add("group");
-mainGroup.orientation = "row";
-var panel = mainGroup.add("panel");
-panel.orientation = "column";
-panel.alignment = "fill";
-panel.alignChildren = "right";
-panel.margins.top = 10;
-panel.maximumSize.height = 250;
-var scrollBar = mainGroup.add("scrollbar",  [380,25,400,460]);
-scrollBar.stepdelta = 10;
-scrollBar.maximumSize.height = panel.maximumSize.height;
-//Create group to hold misspelled words & replacement options
-var gGroup = p1.add("group");
-gGroup.orientation = "column";
-gGroup.alignChildren = "right";
-gGroup.add("statictext", [50,50,296,80], "Replace Misspelled Words");
-var buttonOptions = w.add("group");
-buttonOptions.orientation = "row";
-buttonOptions.alignment = "right";
-buttonOptions.add("button" , undefined , "Ok");
-buttonOptions.add("button" , undefined , "Cancel");
-//On change methods for scrollbar and pressing the check spelling button
-scrollBar.onChanging = function () {
-    gGroup.location.y = -1 * this.value;
-}
-checkSpelling.onClick = function () {
+﻿	/**
+	 * Create the main dialog, check spelling button, scrollbar, and 'ok'/'cancel' buttons. All should be visible
+	 */
+	var window = new Window("dialog" , "AE Spellcheck");
+	window.alignChildren = "right";
+	var checkSpelling = window.add("button" , [0,0,296,30] , "Check Spelling for all comps");
+	var mainGroup = window.add("group");
+	mainGroup.orientation = "row";
+	var panel = mainGroup.add("panel");
+	var scrollBar = mainGroup.add("scrollbar",  [380,25,400,460]);
+	scrollBar.stepdelta = 10;
+	panel.orientation = "column";
+	panel.alignment = "fill";
+	panel.alignChildren = "right";
+	panel.margins.top = 10;
+	panel.maximumSize.height = 250;
+	scrollBar.maximumSize.height = panel.maximumSize.height;
+//=========
+	var replaceGroup = panel.add("group");
+	replaceGroup.orientation = "column";
+	replaceGroup.alignChildren = "right";
+	replaceGroup.add("statictext", [50,50,296,80], "Replace Misspelled Words");
+	checkSpelling.onClick = function () {
 		var allwordsInProj = getAllWords();
-		addReplaceOptions(p1, gGroup,allwordsInProj);
-}
+		addReplaceOptions(panel, replaceGroup,allwordsInProj);
+	}
+	var panelOptions = window.add("group");
+	panelOptions.orientation = "row";
+	panelOptions.alignment = "right";
+	panelOptions.add("button" , undefined , "OK");
+	panelOptions.add("button" , undefined , "Cancel");
 
-// Display panel
-w.show();
+	scrollBar.onChanging = function () {
+		replaceGroup.location.y = -1 * this.value;
+	}
+	window.show();
 
 /**
  * Find misspelled words in all comps, generate list of replacement options. For each word, display
  * word with a dropdown menu of options all within a group.
  */
-function addReplaceOptions(panel, group, textStrings) {
-	//dropdownObjects holds a reference to each created dropdown menu, it's misspelledword, and the layer the word is on (used later on click of replace button)
-	var dropdownObjects = [];
-	for(var i = 0; i< textStrings.length; i++) {
-		var word = textStrings[i].text;
-		var layer = textStrings[i].layer;
-			if(!isThisWordSpelledCorrectly(word)) {
-				misspelledGroup = group.add("group");
-				misspelledGroup.alignChildren = "top";
-				misspelledGroup.add("statictext", [0,0,100,20],word); 
-				var dropdown_array = getCandidatesForThisWord(word);
-				misspelledGroup.dropdown = misspelledGroup.add("group");
-				var dropdown = misspelledGroup.dropdown.add("dropdownlist", [0,0,100,20], dropdown_array); 
-				dropdownObjects.push({dropdown: dropdown, word: word, layer: layer});
-			}
-	}
-	var replaceButton = group.add("button" , [50,0,150,30] , "Replace");
-	replaceButton.onClick = function () {
-		for(var i =0; i< dropdownObjects.length; i++) {
-			if(dropdownObjects[i].dropdown.selection !== null) {
-				replaceTextInLayer(dropdownObjects[i].layer, dropdownObjects[i].word, dropdownObjects[i].dropdown.selection);
-			}
+	function addReplaceOptions(panel, group,textStrings) {
+		var dropdownObjects = [];
+		for(var i = 0; i< textStrings.length; i++) {
+			var word = textStrings[i].text;
+			var layer = textStrings[i].layer;
+				if(!isThisWordSpelledCorrectly(word)) {
+					dropdownGroup = group.add("group");
+					dropdownGroup.alignChildren = "top";
+					dropdownGroup.add("statictext", [0,0,100,20],word); 
+					var dropdown_array = getCandidatesForThisWord(word);
+					dropdownGroup.btns = dropdownGroup.add("group");
+					var dropdown = dropdownGroup.btns.add("dropdownlist", [0,0,100,20], dropdown_array); 
+					dropdownObjects.push({group: dropdownGroup, dropdown: dropdown, word: word, layer: layer});
+				}
 		}
-		panel.remove(group);
+		var replaceButton = group.add("button" , [50,0,150,30] , "Replace");
+		replaceButton.onClick = function () {
+			for(var i =0; i< dropdownObjects.length; i++) {
+				if(dropdownObjects[i].dropdown.selection !== null) {
+					replaceTextInLayer(dropdownObjects[i].layer, dropdownObjects[i].word, dropdownObjects[i].dropdown.selection);
+				}
+			}
+			panel.remove(group);
+		}
+		window.layout.layout(true);
 	}
-	w.layout.layout(true);
-}
 
+	
 /**
  * Returns all strings of editable text from each comp within an AE project
  */
@@ -79,7 +77,7 @@ function getAllWords() {
 	return textStrings;
 }
 
-//Returns current AE Project
+//Returns active AE Project
 var getAEProject = function () { return app.project };
 
 // Check that a project item is a Composition
@@ -130,12 +128,13 @@ var getLayers = function ( aeComp ) {
  * Credit to Sebastian Perier for this method (in find and replace UXP panel for AE)
  */
 var replaceTextInLayer = function (theLayer, findString, replaceString) {
+	var changedSomething = false;
 	// Get the sourceText property, if there is one.
 	var sourceText = theLayer.sourceText;
 	if (sourceText != null) {
 		if (sourceText.numKeys == 0) {
 			// textValue is a TextDocument. Retrieve the string inside
-			var oldString = sourceText.valuse.text;
+			var oldString = sourceText.value.text;
 			if (oldString.indexOf(findString) != -1) {
 				var newString = replaceTextInString(oldString, findString, replaceString);
 				if (oldString != newString) {
@@ -152,11 +151,13 @@ var replaceTextInLayer = function (theLayer, findString, replaceString) {
 					var newString = replaceTextInString(oldString, findString, replaceString);
 					if (oldString != newString) {
 						sourceText.setValueAtKey(keyIndex,newString);
+						changedSomething = true;
 					}
 				}
 			}
 		}
 	}
+	return changedSomething;
 }
 
 var replaceTextInString = function (totalString, findString, replaceString) {
