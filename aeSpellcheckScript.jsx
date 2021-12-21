@@ -1,7 +1,7 @@
 ﻿	/**
 	 * Create the main dialog, check spelling button, scrollbar, and 'ok'/'cancel' buttons. All should be visible
 	 */
-	var window = new Window("dialog" , "AE Spellcheck");
+	var window = new Window("palette", "AE Spellcheck");
 	window.alignChildren = "right";
 	var checkSpelling = window.add("button" , [0,0,296,30] , "Check Spelling");
 	var mainGroup = window.add("group");
@@ -30,15 +30,10 @@
 		ggGroup.show();
 		addReplaceOptions(panel, replaceGroup,allwordsInProj);
 	}
-	var panelOptions = window.add("group");
-	panelOptions.orientation = "row";
-	panelOptions.alignment = "right";
-	panelOptions.add("button" , undefined , "OK");
-	panelOptions.add("button" , undefined , "Cancel");
-
 	scrollBar.onChanging = function () {
 		replaceGroup.location.y = -1 * this.value;
 	}
+	window.center();
 	window.show();
 
 /**
