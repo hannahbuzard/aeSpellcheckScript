@@ -3,7 +3,7 @@
 	 */
 	var window = new Window("dialog" , "AE Spellcheck");
 	window.alignChildren = "right";
-	var checkSpelling = window.add("button" , [0,0,296,30] , "Check Spelling for all comps");
+	var checkSpelling = window.add("button" , [0,0,296,30] , "Check Spelling");
 	var mainGroup = window.add("group");
 	mainGroup.orientation = "row";
 	var panel = mainGroup.add("panel");
@@ -19,9 +19,15 @@
 	var replaceGroup = panel.add("group");
 	replaceGroup.orientation = "column";
 	replaceGroup.alignChildren = "right";
-	replaceGroup.add("statictext", [50,50,296,80], "Replace Misspelled Words");
+	var ggGroup = replaceGroup.add("group");
+	ggGroup.alignChildren = "top";
+	ggGroup.add("statictext", [0,00,150,20], "Replace Misspelled Words");
+	var filter = ggGroup.add("dropdownlist", [0,0,80,20], ["All Comps", "Comp1", "Comp2"]);
+	filter.selection = 0;
+	ggGroup.hide();
 	checkSpelling.onClick = function () {
 		var allwordsInProj = getAllWords();
+		ggGroup.show();
 		addReplaceOptions(panel, replaceGroup,allwordsInProj);
 	}
 	var panelOptions = window.add("group");
@@ -268,7 +274,6 @@ var getEditableStringsFromComp = function ( aeComp ) {
 	var textStrings = [];
 	for(var i = 0; i < layersWithText.length; i++ ) {
 		if ( isTextLayer( layersWithText[i] ) ) {
-			alert(aeComp.name);
 			textStrings.push(new word(layersWithText[i], layersWithText[i].text.property("ADBE Text Document").value, aeComp.name));
 		}
 	}
