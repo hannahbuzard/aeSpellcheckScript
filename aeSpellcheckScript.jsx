@@ -73,7 +73,13 @@
 function getAllWords() {
 	var openProject = getAEProject();
 	var compsInProject = getComps( openProject );
-	var textStrings = getEditableStringsFromComp( compsInProject[0] );
+	var textStrings = [];
+	for(var i = 0; i < compsInProject.length; i++) {
+		var text =  getEditableStringsFromComp( compsInProject[i] );
+		for(var j = 0; j < text.length; j++) {
+			textStrings.push(text[j]);
+		}
+	}
 	return textStrings;
 }
 
