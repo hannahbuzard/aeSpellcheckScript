@@ -48,17 +48,19 @@
 				replaceGroup.add("statictext", [50,50,296,80], textStrings[i].comp);
 				currentComp = textStrings[i].comp;
 			}
-			var word = textStrings[i].text;
 			var layer = textStrings[i].layer;
-				if(!isThisWordSpelledCorrectly(word)) {
+			var wordsInString = textStrings[i].text.toString().split(" ");
+			for(var j = 0; j < wordsInString.length; j++) {
+				if(!isThisWordSpelledCorrectly(wordsInString[j])) {
 					dropdownGroup = group.add("group");
 					dropdownGroup.alignChildren = "top";
-					dropdownGroup.add("statictext", [0,0,100,20],word); 
-					var dropdown_array = getCandidatesForThisWord(word);
+					dropdownGroup.add("statictext", [0,0,100,20], wordsInString[j]); 
+					var dropdown_array = getCandidatesForThisWord(wordsInString[j]);
 					dropdownGroup.btns = dropdownGroup.add("group");
 					var dropdown = dropdownGroup.btns.add("dropdownlist", [0,0,100,20], dropdown_array); 
-					dropdownObjects.push({group: dropdownGroup, dropdown: dropdown, word: word, layer: layer});
+					dropdownObjects.push({group: dropdownGroup, dropdown: dropdown, word: wordsInString[j], layer: layer});
 				}
+			}
 		}
 		var replaceButton = group.add("button" , [50,0,150,30] , "Replace");
 		replaceButton.onClick = function () {
@@ -87,6 +89,14 @@ function getAllWords() {
 		}
 	}
 	return textStrings;
+}
+
+/**
+ * Splits strings with multiple words into an array of single words to be spellchecked
+ */
+ function splitStringIntoWords() {
+	var splitString = [];
+	return splitString;
 }
 
 //Returns active AE Project
