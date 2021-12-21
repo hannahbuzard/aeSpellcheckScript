@@ -39,9 +39,14 @@
  * Find misspelled words in all comps, generate list of replacement options. For each word, display
  * word with a dropdown menu of options all within a group.
  */
-	function addReplaceOptions(panel, group,textStrings) {
+	function addReplaceOptions(panel, group, textStrings) {
 		var dropdownObjects = [];
+		var currentComp = "";
 		for(var i = 0; i< textStrings.length; i++) {
+			if(currentComp !== textStrings[i].comp ) {
+				replaceGroup.add("statictext", [50,50,296,80], textStrings[i].comp);
+				currentComp = textStrings[i].comp;
+			}
 			var word = textStrings[i].text;
 			var layer = textStrings[i].layer;
 				if(!isThisWordSpelledCorrectly(word)) {
@@ -75,7 +80,7 @@ function getAllWords() {
 	var compsInProject = getComps( openProject );
 	var textStrings = [];
 	for(var i = 0; i < compsInProject.length; i++) {
-		var text =  getEditableStringsFromComp( compsInProject[i] );
+		var text = getEditableStringsFromComp( compsInProject[i] );
 		for(var j = 0; j < text.length; j++) {
 			textStrings.push(text[j]);
 		}
@@ -173,8 +178,6 @@ var replaceTextInString = function (totalString, findString, replaceString) {
 }
 
 
-
-
 var isTextLayer = function ( item ) { 
 	var instance = item instanceof TextLayer;
 	return instance;
@@ -251,9 +254,10 @@ var getLayersWithEditableText = function ( aeComp ) {
 	return getLayers( aeComp ).filter( hasEditableText );
 };
 
-var word = function (layer, text) {
+var word = function (layer, text, comp) {
 	this.layer = layer;
 	this.text = text;
+	this.comp = comp;
 }
 
 /**
@@ -264,7 +268,8 @@ var getEditableStringsFromComp = function ( aeComp ) {
 	var textStrings = [];
 	for(var i = 0; i < layersWithText.length; i++ ) {
 		if ( isTextLayer( layersWithText[i] ) ) {
-			textStrings.push(new word(layersWithText[i], layersWithText[i].text.property("ADBE Text Document").value));
+			alert(aeComp.name);
+			textStrings.push(new word(layersWithText[i], layersWithText[i].text.property("ADBE Text Document").value, aeComp.name));
 		}
 	}
 	return textStrings;
