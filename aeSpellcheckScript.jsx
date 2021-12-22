@@ -1,6 +1,9 @@
 ﻿	/**
 	 * Create the main dialog, check spelling button, scrollbar, and 'ok'/'cancel' buttons. All should be visible
 	 */
+	var dropdownObjects = [];
+	var replaceButton;
+	var complabels = [];
 	var window = new Window("palette", "AE Spellcheck");
 	window.alignChildren = "right";
 	var checkSpelling = window.add("button" , [0,0,296,30] , "Check Spelling");
@@ -13,22 +16,35 @@
 	panel.alignment = "fill";
 	panel.alignChildren = "right";
 	panel.margins.top = 10;
-	panel.maximumSize.height = 250;
+	panel.maximumSize.height = 350;
 	scrollBar.maximumSize.height = panel.maximumSize.height;
+	var replaceGroup;
 	//Create group where mispelled words and their suggested replacements will be loaded (on button click)
-	var replaceGroup = panel.add("group");
-	replaceGroup.orientation = "column";
-	replaceGroup.alignChildren = "right";
-	var ggGroup = replaceGroup.add("group");
-	ggGroup.alignChildren = "top";
-	ggGroup.add("statictext", [0,00,150,20], "Replace Misspelled Words");
-	var filter = ggGroup.add("dropdownlist", [0,0,80,20], ["All Comps", "Comp1", "Comp2"]);
-	filter.selection = 0;
-	ggGroup.hide();
 	checkSpelling.onClick = function () {
+		replaceGroup = panel.add("group");
+		replaceGroup.orientation = "column";
+		replaceGroup.alignChildren = "right";
+		var ggGroup = replaceGroup.add("group");
+		ggGroup.alignChildren = "top";
+		ggGroup.add("statictext", [0,00,150,20], "Replace Misspelled Words");
+		//Get the names of all comps in project to add to the filter option
+		var compsInProject = getComps( getAEProject() );
+		var filterLabels = ["All Comps"];
+		for(var i = 0; i < compsInProject.length; i++) {
+			filterLabels.push(compsInProject[i].name);
+		}
+		var filter = ggGroup.add("dropdownlist", [0,0,80,20], filterLabels);
 		var allwordsInProj = getAllWords();
-		ggGroup.show();
-		addReplaceOptions(panel, replaceGroup,allwordsInProj);
+		addReplaceOptions(replaceGroup, allwordsInProj);
+		//When the filter for displaying comps changes, either display UI for only the selected comp, or all comps if "All Comps" is selected
+		filter.onChange = function () {
+			if(filter.selection.toString() === "All Comps") {
+				displayFilteredComps(replaceGroup, allwordsInProj);
+			} else {
+				var wordsInComp = getWordsFromOneComp(filter.selection);
+				displayFilteredComps(replaceGroup, wordsInComp)
+			}
+		}
 	}
 	scrollBar.onChanging = function () {
 		replaceGroup.location.y = -1 * this.value;
@@ -40,16 +56,17 @@
  * Find misspelled words in all comps, generate list of replacement options. For each word, display
  * word with a dropdown menu of options all within a group.
  */
-	function addReplaceOptions(panel, group, textStrings) {
-		var dropdownObjects = [];
+	function addReplaceOptions(group, textStrings) {
 		var currentComp = "";
 		for(var i = 0; i< textStrings.length; i++) {
 			if(currentComp !== textStrings[i].comp ) {
-				replaceGroup.add("statictext", [50,50,296,80], textStrings[i].comp);
+				var complabel = group.add("statictext", [50,50,296,80], textStrings[i].comp);
+				complabels.push(complabel);
 				currentComp = textStrings[i].comp;
 			}
 			var layer = textStrings[i].layer;
 			var wordsInString = textStrings[i].text.toString().split(" ");
+			//If a word is misspelled, then display the misspelled word with a dropdown menu of replacement options
 			for(var j = 0; j < wordsInString.length; j++) {
 				if(!isThisWordSpelledCorrectly(wordsInString[j])) {
 					dropdownGroup = group.add("group");
@@ -62,7 +79,8 @@
 				}
 			}
 		}
-		var replaceButton = group.add("button" , [50,0,150,30] , "Replace");
+		replaceButton = group.add("button" , [50,0,150,30] , "Replace");
+		//when Replace button is clicked, replace misspelled words w/ corrections & then clear the UI view for misspelled words
 		replaceButton.onClick = function () {
 			for(var i =0; i< dropdownObjects.length; i++) {
 				if(dropdownObjects[i].dropdown.selection !== null) {
@@ -70,9 +88,27 @@
 				}
 			}
 			panel.remove(group);
+			dropdownObjects = [];
 		}
 		window.layout.layout(true);
 	}
+
+/**
+ * Remove all currently displayed comps & comp labels from UI view and then
+ * re-load & display UI for only the words from the filtered comp (specified via filter dropdown menu)
+ */
+ function displayFilteredComps(group, words) {
+	for(var i =0; i< dropdownObjects.length; i++) {
+		group.remove(dropdownObjects[i].group);
+	}
+	for(var i =0; i< complabels.length; i++) {
+		group.remove(complabels[i]);
+	}
+	complabels = [];
+	dropdownObjects = [];
+	group.remove(replaceButton);
+	addReplaceOptions(group, words);
+}
 
 	
 /**
@@ -92,11 +128,19 @@ function getAllWords() {
 }
 
 /**
- * Splits strings with multiple words into an array of single words to be spellchecked
+ * Returns all strings of editable text from only one comp (specified via the filter dropdown)
  */
- function splitStringIntoWords() {
-	var splitString = [];
-	return splitString;
+ function getWordsFromOneComp(aeCompName) {
+	var openProject = getAEProject();
+	var textStrings = [];
+	var compsInProject = getComps( openProject );
+	for(var i = 0; i < compsInProject.length; i++) {
+		if(compsInProject[i].name.toString() === aeCompName.toString()) {
+			textStrings = getEditableStringsFromComp( compsInProject[i] );
+			break;
+		}
+	}
+	return textStrings;
 }
 
 //Returns active AE Project
